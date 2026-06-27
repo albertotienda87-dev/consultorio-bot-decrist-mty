@@ -152,6 +152,15 @@ def extract_incoming_message(body: dict):
 
             elif interactive_type == "list_reply":
                 incoming_text = interactive.get("list_reply", {}).get("id", UNSUPPORTED_MESSAGE)
+        
+        elif message_type == "button":
+            button = message.get("button", {})
+
+            incoming_text = (
+                button.get("payload")
+                or button.get("text")
+                or "__unsupported_message__"
+            )
 
         return {
             "phone": phone,

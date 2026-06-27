@@ -1,6 +1,12 @@
 import requests
 
-from app.config import ACCESS_TOKEN, PHONE_NUMBER_ID
+from app.config import (
+    ACCESS_TOKEN,
+    PHONE_NUMBER_ID,
+    USE_TEMPLATE_REMINDERS,
+    WHATSAPP_REMINDER_TEMPLATE_NAME,
+    WHATSAPP_TEMPLATE_LANGUAGE,
+)
 
 URL = f"https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages"
 
@@ -17,7 +23,7 @@ def send_whatsapp_payload(data: dict):
 
     return response
 
-def send_appointment_reminder(
+def send_appointment_reminder_interactive(
     phone: str,
     patient_name: str,
     appointment_date: str,
@@ -68,6 +74,100 @@ def send_appointment_reminder(
     }
 
     return send_whatsapp_payload(data)
+
+def send_appointment_reminder_template(
+    phone: str,
+    patient_name: str,
+    appointment_date: str,
+    appointment_time: str,
+):
+    data = {
+        "messaging_product": "whatsapp",
+        "to": phone,
+        "type": "template",
+        "template": {
+            "name": WHATSAPP_REMINDER_TEMPLATE_NAME,
+            "language": {
+                "code": WHATSAPP_TEMPLATE_LANGUAGE
+            },
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": patient_name
+                        },
+                        {
+                            "type": "text",
+                            "text": appointment_date
+                        },
+                        {
+                            "type": "text",
+                            "text": appointment_time
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "quick_reply",
+                    "index": "0",
+                    "parameters": [
+                        {
+                            "type": "payload",
+                            "payload": "reminder_confirm_appointment"
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "quick_reply",
+                    "index": "1",
+                    "parameters": [
+                        {
+                            "type": "payload",
+                            "payload": "reminder_reschedule_appointment"
+                        }
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "quick_reply",
+                    "index": "2",
+                    "parameters": [
+                        {
+                            "type": "payload",
+                            "payload": "reminder_cancel_appointment"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    return send_whatsapp_payload(data)
+
+
+def send_appointment_reminder(
+    phone: str,
+    patient_name: str,
+    appointment_date: str,
+    appointment_time: str,
+):
+    if USE_TEMPLATE_REMINDERS:
+        return send_appointment_reminder_template(
+            phone=phone,
+            patient_name=patient_name,
+            appointment_date=appointment_date,
+            appointment_time=appointment_time,
+        )
+
+    return send_appointment_reminder_interactive(
+        phone=phone,
+        patient_name=patient_name,
+        appointment_date=appointment_date,
+        appointment_time=appointment_time,
+    )
 
 def send_message(phone: str, message: str):
     data = {
