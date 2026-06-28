@@ -38,8 +38,12 @@ def combine_date_time(day: date, time_value: str) -> datetime:
     )
 
 
+def get_today_local_date() -> date:
+    return datetime.now(ZoneInfo(TIMEZONE)).date()
+
+
 def get_min_bookable_date() -> date:
-    return date.today() + timedelta(days=MIN_ADVANCE_DAYS)
+    return get_today_local_date() + timedelta(days=MIN_ADVANCE_DAYS)
 
 
 def is_day_bookable(day: date) -> bool:
